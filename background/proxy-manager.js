@@ -1,0 +1,399 @@
+
+import { PROXY_CONFIG } from './proxy-config.js';
+
+class ProxyManager {
+  constructor() {
+    this.isEnabled = false;
+    this.proxyMode = 'all'; // 'all' or 'whitelist'
+    this.urlWhitelist = []; // In-memory cache of whitelist
+    this.whitelistCache = new Map(); // Fast lookup cache: domain -> true
+    this.init();
+  }
+
+  async init() {
+    try {
+      const result = await chrome.storage.local.get(['proxyEnabled', 'proxyMode', 'urlWhitelist', 'jwtToken']);
+      this.isEnabled = result.proxyEnabled ?? PROXY_CONFIG.autoEnable;
+      this.proxyMode = result.proxyMode ?? 'all';
+      this.urlWhitelist = result.urlWhitelist ?? [];
+      this.updateWhitelistCache(this.urlWhitelist);
+      
+      console.log('[ProxyManager] Инициализация:', {
+        enabled: this.isEnabled,
+        mode: this.proxyMode,
+        whitelist: this.urlWhitelist,
+        hasToken: !!result.jwtToken
+      });
+      
+      const REQUIRE_AUTH = true;
+      if (REQUIRE_AUTH && !result.jwtToken) {
+        console.log('[ProxyManager] Нет токена авторизации - прокси отключен');
+        this.isEnabled = false;
+        await chrome.storage.local.set({ proxyEnabled: false });
+        await this.disableProxy();
+        return;
+      }
+      
+      if (this.isEnabled) {
+        await this.enableProxy();
+      } else {
+        await this.disableProxy();
+      }
+      
+      chrome.storage.onChanged.addListener(async (changes, area) => {
+        if (area === 'local') {
+          if (changes.proxyEnabled) {
+            this.isEnabled = changes.proxyEnabled.newValue;
+            if (this.isEnabled) {
+              const REQUIRE_AUTH = true;
+              if (REQUIRE_AUTH) {
+                const result = await chrome.storage.local.get('jwtToken');
+                if (!result.jwtToken) {
+                  console.log('[ProxyManager] Попытка включить прокси без авторизации - отклонено');
+                  this.isEnabled = false;
+                  await chrome.storage.local.set({ proxyEnabled: false });
+                  await this.disableProxy();
+                  return;
+                }
+              }
+              await this.enableProxy();
+            } else {
+              await this.disableProxy();
+            }
+          }
+          
+          if (changes.proxyMode) {
+            this.proxyMode = changes.proxyMode.newValue;
+            console.log('[ProxyManager] Режим изменён через storage:', this.proxyMode);
+            if (this.isEnabled) {
+              await this.enableProxy();
+            }
+          }
+          
+          if (changes.urlWhitelist) {
+            this.urlWhitelist = changes.urlWhitelist.newValue || [];
+            this.updateWhitelistCache(this.urlWhitelist);
+            console.log('[ProxyManager] Whitelist изменён через storage:', this.urlWhitelist);
+            if (this.isEnabled && this.proxyMode === 'whitelist') {
+              await this.enableProxy();
+            }
+          }
+          
+          if (changes.jwtToken && !changes.jwtToken.newValue) {
+            console.log('[ProxyManager] Токен удален (logout) - отключаю прокси');
+            this.isEnabled = false;
+            await chrome.storage.local.set({ proxyEnabled: false });
+            await this.disableProxy();
+          }
+        }
+      });
+      
+    } catch (error) {
+      console.error('[ProxyManager] Ошибка инициализации:', error);
+    }
+  }
+  
+  /**
+   * Update proxy mode
+   */
+  async updateProxyMode(mode) {
+    this.proxyMode = mode;
+    console.log('[ProxyManager] Режим изменён:', mode);
+    
+    if (this.isEnabled) {
+      await this.enableProxy();
+    }
+  }
+  
+  /**
+   * Update URL whitelist
+   */
+  async updateWhitelist(urls) {
+    this.urlWhitelist = urls;
+    this.updateWhitelistCache(urls);
+    console.log('[ProxyManager] Whitelist обновлён:', urls);
+    
+    if (this.isEnabled && this.proxyMode === 'whitelist') {
+      await this.enableProxy();
+    }
+  }
+  
+  /**
+   * Update in-memory whitelist cache for fast lookups
+   */
+  updateWhitelistCache(urls) {
+    this.whitelistCache.clear();
+    if (urls && Array.isArray(urls)) {
+      urls.forEach(url => {
+        this.whitelistCache.set(url.toLowerCase(), true);
+      });
+    }
+    console.log('[ProxyManager] Кеш whitelist обновлён, элементов:', this.whitelistCache.size);
+  }
+
+  async enableProxy() {
+    try {
+      let proxyConfig;
+      
+      if (this.proxyMode === 'whitelist') {
+        const pacScript = this.generatePacScript();
+        proxyConfig = {
+          mode: "pac_script",
+          pacScript: {
+            data: pacScript
+          }
+        };
+        console.log('[ProxyManager] Включаю whitelist режим, URL:', this.urlWhitelist);
+        console.log('[ProxyManager] PAC Script:', pacScript);
+      } else {
+        proxyConfig = {
+          mode: "fixed_servers",
+          rules: {
+            singleProxy: {
+              scheme: PROXY_CONFIG.scheme,
+              host: PROXY_CONFIG.host,
+              port: PROXY_CONFIG.port
+            },
+            bypassList: PROXY_CONFIG.bypassList
+          }
+        };
+        console.log('[ProxyManager] Включаю режим "все сайты"');
+      }
+
+      await chrome.proxy.settings.set({
+        value: proxyConfig,
+        scope: 'regular'
+      });
+
+      this.isEnabled = true;
+      await chrome.storage.local.set({ proxyEnabled: true });
+      
+      console.log(`[ProxyManager] Прокси включён: ${PROXY_CONFIG.host}:${PROXY_CONFIG.port}`);
+      
+      chrome.proxy.settings.get({}, (config) => {
+        console.log('[ProxyManager] Текущие настройки прокси:', JSON.stringify(config.value, null, 2));
+      });
+      
+      if (PROXY_CONFIG.showBadge) {
+        this.updateBadge(true);
+      }
+      
+      const mode = this.proxyMode === 'whitelist' ? 'Только выбранные' : 'Все сайты';
+      this.showNotification('Прокси включён', `${PROXY_CONFIG.host}:${PROXY_CONFIG.port}\n${mode}`);
+      
+    } catch (error) {
+      console.error('[ProxyManager] Ошибка включения прокси:', error);
+      this.showNotification('Ошибка', 'Не удалось включить прокси');
+      throw error;
+    }
+  }
+  
+  /**
+   * Convert domain to Punycode (for PAC script compatibility)
+   */
+  toPunycode(domain) {
+    try {
+      // If domain contains non-ASCII characters, convert to Punycode
+      if (/[^\x00-\x7F]/.test(domain)) {
+        // Use URL API to convert to Punycode
+        const url = new URL(`http://${domain}`);
+        return url.hostname;
+      }
+      return domain;
+    } catch (e) {
+      // If conversion fails, return original domain
+      console.warn('[ProxyManager] Punycode conversion failed for:', domain, e);
+      return domain;
+    }
+  }
+
+  /**
+   * Escape string for PAC script (remove non-ASCII characters from comments)
+   */
+  escapeForPAC(str) {
+    // Remove non-ASCII characters from string (keep only ASCII)
+    return str.replace(/[^\x00-\x7F]/g, '');
+  }
+
+  /**
+   * Generate PAC script for whitelist mode
+   */
+  generatePacScript() {
+    const pacProxyToken = (() => {
+      const s = (PROXY_CONFIG.scheme || 'http').toLowerCase();
+      if (s === 'socks5') return 'SOCKS5';
+      if (s === 'socks' || s === 'socks4') return 'SOCKS';
+      return 'PROXY';
+    })();
+    const proxyString = `${pacProxyToken} ${PROXY_CONFIG.host}:${PROXY_CONFIG.port}`;
+    const bypassList = PROXY_CONFIG.bypassList || [];
+    
+    if (this.urlWhitelist.length === 0) {
+      console.log('[ProxyManager] Whitelist пустой - все сайты напрямую');
+      return `
+function FindProxyForURL(url, host) {
+  return "DIRECT";
+}`.trim();
+    }
+    
+    console.log('[ProxyManager] Генерирую PAC скрипт для whitelist:', this.urlWhitelist);
+    
+    // Create pattern matching conditions for whitelist
+    const whitelistConditions = this.urlWhitelist.map(pattern => {
+      // Normalize pattern: remove protocol and path, convert to lowercase
+      let normalizedPattern = pattern.trim().toLowerCase();
+      normalizedPattern = normalizedPattern.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+      
+      // Convert to Punycode if needed
+      normalizedPattern = this.toPunycode(normalizedPattern);
+      
+      if (normalizedPattern.startsWith('*.')) {
+        // Wildcard subdomain: *.example.com
+        const domain = normalizedPattern.slice(2); // Remove *.
+        // Match: example.com, www.example.com, mail.example.com, etc.
+        const conditions = [
+          `host.toLowerCase() == "${domain}"`,        // Exact match: example.com
+          `dnsDomainIs(host, ".${domain}")`           // All subdomains: .example.com (with leading dot!)
+        ];
+        return `(${conditions.join(' || ')})`;
+      } else if (normalizedPattern.includes('*')) {
+        // Other wildcards (e.g., google.*, *google*)
+        return `shExpMatch(host.toLowerCase(), "${normalizedPattern}")`;
+      } else {
+        // Exact domain: example.com or www.example.com
+        // For www. subdomains, only do exact match (subdomains handled by *.domain.com wildcards)
+        // For root domains, match both exact and subdomains
+        if (normalizedPattern.startsWith('www.')) {
+          // Only exact match for www. subdomains
+          return `host.toLowerCase() == "${normalizedPattern}"`;
+        } else {
+          // Match: example.com AND all subdomains (www.example.com, mail.example.com, etc.)
+          const conditions = [
+            `host.toLowerCase() == "${normalizedPattern}"`,  // Exact match: example.com
+            `dnsDomainIs(host, ".${normalizedPattern}")`     // All subdomains: .example.com (note the leading dot!)
+          ];
+          
+          return `(${conditions.join(' || ')})`;
+        }
+      }
+    }).join(' || ');
+    
+    // Create bypass conditions
+    const bypassConditions = bypassList.map(pattern => {
+      const cleanPattern = this.toPunycode(pattern);
+      if (pattern.includes('/')) {
+        // IP with subnet
+        return `isInNet(host, "${pattern.split('/')[0]}", "${pattern.split('/')[1] || '255.255.255.255'}")`;
+      } else {
+        return `dnsDomainIs(host, "${cleanPattern}") || host == "${cleanPattern}"`;
+      }
+    }).join(' || ');
+    
+    // PAC script must contain only ASCII characters
+    const pacScript = `
+function FindProxyForURL(url, host) {
+  ${bypassConditions ? `if (${bypassConditions}) {
+    return "DIRECT";
+  }` : ''}
+  
+  if (${whitelistConditions}) {
+    return "${proxyString}";
+  }
+  
+  return "DIRECT";
+}`.trim();
+    
+    console.log('[ProxyManager] Сгенерированный PAC скрипт:');
+    console.log(pacScript);
+    
+    // Validate that PAC script contains only ASCII
+    if (!/^[\x00-\x7F]*$/.test(pacScript)) {
+      console.error('[ProxyManager] PAC script contains non-ASCII characters!');
+      console.error('[ProxyManager] Non-ASCII parts:', pacScript.match(/[^\x00-\x7F]+/g));
+    }
+    
+    return pacScript;
+  }
+
+  async disableProxy() {
+    try {
+      const directConfig = {
+        mode: "direct"
+      };
+
+      await chrome.proxy.settings.set({
+        value: directConfig,
+        scope: 'regular'
+      });
+
+      this.isEnabled = false;
+      await chrome.storage.local.set({ proxyEnabled: false });
+      
+      console.log('[ProxyManager] Прокси отключён');
+      
+      if (PROXY_CONFIG.showBadge) {
+        this.updateBadge(false);
+      }
+      
+      this.showNotification('Прокси отключён', 'Прямое подключение');
+      
+    } catch (error) {
+      console.error('[ProxyManager] Ошибка отключения прокси:', error);
+      this.showNotification('Ошибка', 'Не удалось отключить прокси');
+      throw error;
+    }
+  }
+
+  async toggleProxy() {
+    console.log('[ProxyManager] Toggle прокси, текущее состояние:', this.isEnabled);
+    
+    if (this.isEnabled) {
+      await this.disableProxy();
+    } else {
+      await this.enableProxy();
+    }
+    
+    return this.isEnabled;
+  }
+
+  getStatus() {
+    return {
+      enabled: this.isEnabled,
+      config: {
+        host: PROXY_CONFIG.host,
+        port: PROXY_CONFIG.port,
+        scheme: PROXY_CONFIG.scheme
+      }
+    };
+  }
+
+  updateBadge(enabled) {
+    if (enabled) {
+      chrome.action.setBadgeText({ text: 'ON' });
+      chrome.action.setBadgeBackgroundColor({ color: '#4CAF50' });
+      chrome.action.setTitle({ 
+        title: `Proxy Pet: ВКЛЮЧЁН\n${PROXY_CONFIG.host}:${PROXY_CONFIG.port}\n(кликните для отключения)` 
+      });
+    } else {
+      chrome.action.setBadgeText({ text: 'OFF' });
+      chrome.action.setBadgeBackgroundColor({ color: '#F44336' });
+      chrome.action.setTitle({ 
+        title: 'Proxy Pet: ОТКЛЮЧЁН\n(кликните для включения)' 
+      });
+    }
+  }
+
+  showNotification(title, message) {
+    /*
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: '../icons/icon48.png',
+      title: title,
+      message: message,
+      priority: 0
+    });
+    */
+  }
+}
+
+export const proxyManager = new ProxyManager();

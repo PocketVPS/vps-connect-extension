@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxy Pet</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <!-- Container -->
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 128 128">
+                    <circle cx="64" cy="64" r="60" fill="#4285F4"/>
+                    <text x="64" y="84" font-family="Arial, sans-serif" font-size="70" text-anchor="middle" fill="white" font-weight="bold">P</text>
+                </svg>
+            </div>
+            <h1>Proxy Pet</h1>
+        </div>
+
+        <!-- Not Authenticated View -->
+        <div id="auth-view" class="view">
+            <!-- Tab Switcher -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="login">Вход</button>
+                <button class="tab-btn" data-tab="register">Регистрация</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-form" class="tab-content active">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" name="email" placeholder="your@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Пароль</label>
+                        <input type="password" id="login-password" name="password" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Войти</button>
+                    <div class="error-message" id="login-error"></div>
+                </form>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="tab-content">
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" name="email" placeholder="your@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Пароль</label>
+                        <input type="password" id="register-password" name="password" placeholder="••••••••" required minlength="8">
+                        <small>Минимум 8 символов</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password-confirm">Подтвердите пароль</label>
+                        <input type="password" id="register-password-confirm" name="password-confirm" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                    <div class="error-message" id="register-error"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Authenticated View -->
+        <div id="dashboard-view" class="view hidden">
+            <!-- User Info -->
+            <div class="user-info">
+                <div class="avatar">
+                    <svg width="40" height="40" viewBox="0 0 40 40">
+                        <circle cx="20" cy="20" r="20" fill="#4285F4"/>
+                        <text x="20" y="27" font-family="Arial" font-size="18" text-anchor="middle" fill="white" font-weight="bold">U</text>
+                    </svg>
+                </div>
+                <div class="user-details">
+                    <div class="user-email" id="user-email">user@example.com</div>
+                    <div class="user-status" id="user-status">
+                        <span class="status-dot"></span>
+                        <span>Активен</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Proxy Control -->
+            <div class="proxy-control">
+                <div class="control-header">
+                    <h2>Управление прокси</h2>
+                    <div class="proxy-status" id="proxy-status">
+                        <span class="status-indicator off"></span>
+                        <span>Выключен</span>
+                    </div>
+                </div>
+                
+                <button id="toggle-proxy" class="btn btn-large btn-toggle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M8 12h8"/>
+                    </svg>
+                    <span>Включить прокси</span>
+                </button>
+
+                <div class="proxy-info" id="proxy-info">
+                    <div class="info-item">
+                        <span class="label">Сервер:</span>
+                        <span class="value" id="proxy-server">—</span>
+                    </div>
+                </div>
+                
+                <!-- Proxy Mode Selection -->
+                <div class="proxy-mode">
+                    <div class="mode-header">
+                        <span class="label">Режим проксирования:</span>
+                    </div>
+                    <div class="mode-selector">
+                        <label class="radio-label">
+                            <input type="radio" name="proxy-mode" value="all" id="mode-all" checked>
+                            <span>Все сайты</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="proxy-mode" value="whitelist" id="mode-whitelist">
+                            <span>Только выбранные</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- URL Whitelist (hidden by default) -->
+                <div class="url-whitelist hidden" id="url-whitelist-section">
+                    <div class="whitelist-header">
+                        <span class="label">Список сайтов:</span>
+                        <button id="add-url-btn" class="btn-icon" title="Добавить сайт">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Add URL Form -->
+                    <div class="add-url-form hidden" id="add-url-form">
+                        <input type="text" id="url-input" placeholder="example.com или *.example.com" class="input-field">
+                        <div class="form-buttons">
+                            <button id="save-url-btn" class="btn btn-primary btn-small">Добавить</button>
+                            <button id="cancel-url-btn" class="btn btn-secondary btn-small">Отмена</button>
+                        </div>
+                    </div>
+                    
+                    <!-- URL List -->
+                    <div class="url-list" id="url-list">
+                        <div class="empty-state">Нет добавленных сайтов</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions">
+                <button id="logout-btn" class="btn btn-secondary btn-small">Выйти</button>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+</body>
+</html>
