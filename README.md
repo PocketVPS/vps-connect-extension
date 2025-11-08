@@ -16,9 +16,11 @@ Chrome extension for managing proxy connections with JWT authentication.
    ```bash
    git clone https://github.com/yourusername/proxy-pet-extension.git
    ```
+   OR
+   Download the repository as a zip file and extract it.
 
 2. **Install in browser**
-   - Open your browser and go to `chrome://extensions/` (Chrome) or `edge://extensions/` (Edge)
+   - Open your browser and go to `browser://extensions`
    - Enable **Developer mode** (toggle in top right corner)
    - Click **Load unpacked**
    - Select the `proxy-pet-extension` folder
