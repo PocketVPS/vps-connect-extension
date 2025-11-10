@@ -40,21 +40,6 @@ Chrome extension for easy one-click connection to your VPS server with JWT authe
    - **Выбранные сайты** (Selected Sites) - route only selected URLs
 5. Add URLs to your list as needed (e.g., `youtube.com`, `*.google.com`)
 
-## 🔧 Configuration
-
-Edit `background/proxy-config.js`:
-
-```javascript
-export const PROXY_CONFIG = {
-  host: "your-vps-server.com",
-  port: 8080,
-  scheme: "http",
-  authAPI: {
-    baseURL: "http://your-vps-server.com:8081"
-  }
-};
-```
-
 ## 📝 License
 
 MIT License - see [LICENSE](LICENSE) file for details.
