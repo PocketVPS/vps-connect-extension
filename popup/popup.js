@@ -19,6 +19,8 @@ const tabContents = document.querySelectorAll('.tab-content');
 // Forms
 const loginForm = document.getElementById('loginForm');
 const registerForm = document.getElementById('registerForm');
+const verifyForm = document.getElementById('verifyForm');
+const backToRegisterBtn = document.getElementById('back-to-register');
 
 // Dashboard elements
 const userEmailEl = document.getElementById('user-email');
@@ -41,6 +43,10 @@ const urlList = document.getElementById('url-list');
 // Error messages
 const loginError = document.getElementById('login-error');
 const registerError = document.getElementById('register-error');
+const verifyError = document.getElementById('verify-error');
+
+// Store email for verification
+let pendingVerificationEmail = null;
 
 /**
  * Initialize popup
@@ -87,6 +93,10 @@ function setupEventListeners() {
     // Register form
     registerForm.addEventListener('submit', handleRegister);
     
+    // Verify form
+    verifyForm.addEventListener('submit', handleVerifyEmail);
+    backToRegisterBtn.addEventListener('click', () => switchTab('register'));
+    
     // Toggle proxy
     toggleProxyBtn.addEventListener('click', handleToggleProxy);
     
@@ -110,12 +120,18 @@ function switchTab(tabName) {
     tabBtns.forEach(btn => btn.classList.remove('active'));
     tabContents.forEach(content => content.classList.remove('active'));
     
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-    document.getElementById(`${tabName}-form`).classList.add('active');
+    if (tabName === 'verify') {
+        // Show verify form without tab button
+        document.getElementById('verify-form').classList.add('active');
+    } else {
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        document.getElementById(`${tabName}-form`).classList.add('active');
+    }
     
     // Clear errors
     hideError(loginError);
     hideError(registerError);
+    hideError(verifyError);
 }
 
 /**
@@ -223,21 +239,72 @@ async function handleRegister(e) {
         console.log('[Popup] Response data:', data);
         
         if (response.ok) {
-            // Save token
-            await saveToken(data.token);
-            await saveUser(data.user);
-            
-            // Show dashboard
-            await showDashboard();
-            
-            // Reset form
+            // Registration successful, show verification form
+            pendingVerificationEmail = email;
+            document.getElementById('verify-email-display').textContent = email;
             registerForm.reset();
+            switchTab('verify');
         } else {
             showError(registerError, data.error || 'Ошибка регистрации');
         }
     } catch (error) {
         console.error('[Popup] Register error:', error);
         showError(registerError, 'Не удалось подключиться к серверу');
+    } finally {
+        hideLoading();
+    }
+}
+
+/**
+ * Handle email verification
+ */
+async function handleVerifyEmail(e) {
+    e.preventDefault();
+    
+    const code = document.getElementById('verify-code').value;
+    
+    if (!pendingVerificationEmail) {
+        showError(verifyError, 'Email не найден. Пожалуйста, зарегистрируйтесь снова.');
+        return;
+    }
+    
+    hideError(verifyError);
+    showLoading();
+    
+    try {
+        console.log('[Popup] Верификация email:', pendingVerificationEmail);
+        
+        const response = await fetch(`${API_BASE_URL}/auth/verify-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                email: pendingVerificationEmail, 
+                code: code 
+            })
+        });
+        
+        const data = await response.json();
+        console.log('[Popup] Verification response:', data);
+        
+        if (response.ok) {
+            // Save token and user
+            await saveToken(data.token);
+            await saveUser(data.user);
+            
+            // Clear pending email
+            pendingVerificationEmail = null;
+            
+            // Show dashboard
+            await showDashboard();
+            
+            // Reset form
+            verifyForm.reset();
+        } else {
+            showError(verifyError, data.error || 'Неверный код. Проверьте код из письма.');
+        }
+    } catch (error) {
+        console.error('[Popup] Verification error:', error);
+        showError(verifyError, 'Не удалось подключиться к серверу');
     } finally {
         hideLoading();
     }
@@ -254,7 +321,7 @@ async function handleToggleProxy() {
         if (response.success) {
             updateProxyStatus(response.enabled);
         } else {
-            alert('Ошибка переключения прокси: ' + (response.error || 'Unknown error'));
+            alert('Ошибка подключения: ' + (response.error || 'Unknown error'));
         }
     } catch (error) {
         console.error('[Popup] Toggle proxy error:', error);
@@ -354,7 +421,7 @@ function updateProxyStatus(enabled) {
         statusText.textContent = 'Включен';
         
         toggleProxyBtn.classList.add('active');
-        toggleText.textContent = 'Выключить прокси';
+        toggleText.textContent = 'Отключиться';
         toggleIcon.setAttribute('d', 'M8 12h8');
     } else {
         statusIndicator.classList.remove('on');
@@ -362,7 +429,7 @@ function updateProxyStatus(enabled) {
         statusText.textContent = 'Выключен';
         
         toggleProxyBtn.classList.remove('active');
-        toggleText.textContent = 'Включить прокси';
+        toggleText.textContent = 'Подключиться';
         toggleIcon.setAttribute('d', 'M8 12h8');
     }
 }

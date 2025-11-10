@@ -2,10 +2,10 @@
 
 ## Prerequisites
 
-Before installing Proxy Pet extension, ensure you have:
+Before installing VPS Connect extension, ensure you have:
 
 1. **Google Chrome** (version 88 or higher)
-2. **A proxy server** with JWT authentication support
+2. **A VPS server** with JWT authentication support
 3. **Auth API server** for user registration and login
 
 ## Step-by-Step Installation
@@ -14,35 +14,35 @@ Before installing Proxy Pet extension, ensure you have:
 
 #### Option A: Clone from GitHub
 ```bash
-git clone https://github.com/yourusername/proxy-pet-extension.git
-cd proxy-pet-extension
+git clone https://github.com/yourusername/vps-connect-extension.git
+cd vps-connect-extension
 ```
 
 #### Option B: Download ZIP
-1. Go to the [Releases page](https://github.com/yourusername/proxy-pet-extension/releases)
+1. Go to the [Releases page](https://github.com/yourusername/vps-connect-extension/releases)
 2. Download the latest release ZIP file
 3. Extract the ZIP file to a folder
 
-### 2. Configure Proxy Server
+### 2. Configure VPS Server
 
-Edit the `background/proxy-config.js` file with your proxy server details:
+Edit the `background/proxy-config.js` file with your VPS server details:
 
 ```javascript
 export const PROXY_CONFIG = {
-  // Replace with your proxy server address
-  host: "your-proxy-server.com",
+  // Replace with your VPS server address
+  host: "your-vps-server.com",
   
-  // Replace with your proxy server port
+  // Replace with your VPS server port
   port: 8080,
   
-  // Proxy scheme (usually "http")
+  // Connection scheme (usually "http")
   scheme: "http",
   
   // Auth API configuration
   authAPI: {
-    host: "your-auth-server.com",
+    host: "your-vps-server.com",
     port: 8081,
-    baseURL: "http://your-auth-server.com:8081"
+    baseURL: "http://your-vps-server.com:8081"
   },
   
   // Add any local addresses you want to bypass
@@ -63,56 +63,56 @@ export const PROXY_CONFIG = {
 2. Navigate to `chrome://extensions/`
 3. Enable **Developer mode** (toggle switch in the top right corner)
 4. Click **Load unpacked** button
-5. Select the `proxy-pet-extension` folder
+5. Select the `vps-connect-extension` folder
 6. The extension should now appear in your extensions list
 
 ### 4. Pin the Extension (Optional)
 
 1. Click the **Extensions** icon (puzzle piece) in Chrome toolbar
-2. Find **Proxy Pet** in the list
+2. Find **VPS Connect** in the list
 3. Click the **pin** icon to keep it visible in the toolbar
 
 ## First Time Setup
 
 ### 1. Register an Account
 
-1. Click the Proxy Pet icon in your Chrome toolbar
+1. Click the VPS Connect icon in your Chrome toolbar
 2. Click the **Register** tab
 3. Enter your email and password
 4. Click **Register**
 5. You'll be automatically logged in
 
-### 2. Enable Proxy
+### 2. Connect to Server
 
-1. In the dashboard, click **Enable Proxy**
+1. In the dashboard, click **Подключиться** (Connect)
 2. The badge will turn green showing "ON"
-3. Your traffic is now routed through the proxy
+3. Your traffic is now routed through your VPS server
 
-### 3. Choose Proxy Mode
+### 3. Choose Connection Mode
 
-#### All Sites Mode (Default)
-- All websites will be proxied (except those in bypass list)
+#### Все сайты (All Sites Mode - Default)
+- All websites will be routed through your server (except those in bypass list)
 - Best for general browsing
 
-#### Selected Sites Only Mode
-- Only whitelisted websites will be proxied
+#### Выбранные сайты (Selected Sites Only Mode)
+- Only selected websites will be routed through your server
 - Best for specific use cases (e.g., only YouTube)
 
 To switch modes:
 1. Select your preferred mode in the dashboard
-2. If using "Selected Sites Only", add URLs to the whitelist
+2. If using "Выбранные сайты" (Selected Sites), add URLs to your list
 
-### 4. Add URLs to Whitelist (Optional)
+### 4. Add URLs to Your List (Optional)
 
-If using "Selected Sites Only" mode:
+If using "Выбранные сайты" (Selected Sites) mode:
 
 1. Click **Add URL** button
 2. Enter a domain:
    - `youtube.com` - Matches youtube.com and all subdomains
    - `*.google.com` - Matches all Google subdomains
    - `www.example.com` - Matches only www.example.com
-3. Click **Save**
-4. The URL will appear in your whitelist
+3. Click **Добавить** (Add)
+4. The URL will appear in your list
 
 ## Verification
 
@@ -123,9 +123,9 @@ To verify the extension is working:
 3. **Check DevTools**: 
    - Press F12 to open DevTools
    - Go to Console tab
-   - Look for Proxy Pet logs
+   - Look for VPS Connect logs
 4. **Check IP**: Visit https://whatismyipaddress.com/
-   - Your IP should match your proxy server's IP
+   - Your IP should match your VPS server's IP
 
 ## Troubleshooting
 

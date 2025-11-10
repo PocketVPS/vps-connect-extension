@@ -19,6 +19,30 @@ export async function registerUser(email, password) {
         }
         
         const data = await response.json();
+        console.log('Registration initiated, email verification required');
+        return data;
+    } catch (error) {
+        console.error('Registration error:', error);
+        throw error;
+    }
+}
+
+export async function verifyEmail(email, code) {
+    try {
+        const response = await fetch(`${AUTH_API_URL}/api/auth/verify-email`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, code })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Verification failed');
+        }
+        
+        const data = await response.json();
         
         await chrome.storage.local.set({ 
             jwtToken: data.token,
@@ -26,10 +50,10 @@ export async function registerUser(email, password) {
             isAuthenticated: true
         });
         
-        console.log('User registered successfully:', data.user.email);
+        console.log('Email verified successfully:', data.user.email);
         return data;
     } catch (error) {
-        console.error('Registration error:', error);
+        console.error('Verification error:', error);
         throw error;
     }
 }

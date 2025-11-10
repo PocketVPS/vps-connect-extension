@@ -1,12 +1,12 @@
-# 🐾 Proxy Pet
+# 🚀 VPS Connect
 
-Chrome extension for managing proxy connections with JWT authentication.
+Chrome extension for easy one-click connection to your VPS server with JWT authentication.
 
 ## ✨ Features
 
 - 🔐 JWT Authentication
-- 🚀 One-click proxy toggle
-- 🎯 Selective proxying (all sites or whitelist only)
+- 🚀 One-click server connection
+- 🎯 Selective routing (all sites or selected sites only)
 - 📋 Whitelist management with wildcard support
 - 🔔 Visual status indicator
 
@@ -14,7 +14,7 @@ Chrome extension for managing proxy connections with JWT authentication.
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/proxy-pet-extension.git
+   git clone https://github.com/yourusername/vps-connect-extension.git
    ```
    OR
    Download the repository as a zip file and extract it.
@@ -23,21 +23,21 @@ Chrome extension for managing proxy connections with JWT authentication.
    - Open your browser and go to `browser://extensions`
    - Enable **Developer mode** (toggle in top right corner)
    - Click **Load unpacked**
-   - Select the `proxy-pet-extension` folder
+   - Select the `vps-connect-extension` folder
 
-3. **Configure proxy server**
+3. **Configure VPS server**
    - Edit `background/proxy-config.js`
-   - Update `host` and `port` to match your proxy server
+   - Update `host` and `port` to match your VPS server
 
 ## 🚀 Usage
 
-1. Click the Proxy Pet icon in your browser toolbar
+1. Click the VPS Connect icon in your browser toolbar
 2. Register or login with your credentials
-3. Click "Enable Proxy" to activate
-4. Choose proxy mode:
-   - **All Sites** - proxy all traffic
-   - **Selected Sites Only** - proxy only whitelisted URLs
-5. Add URLs to whitelist as needed (e.g., `youtube.com`, `*.google.com`)
+3. Click "Подключиться" (Connect) to activate
+4. Choose connection mode:
+   - **Все сайты** (All Sites) - route all traffic through your server
+   - **Выбранные сайты** (Selected Sites) - route only selected URLs
+5. Add URLs to your list as needed (e.g., `youtube.com`, `*.google.com`)
 
 ## 🔧 Configuration
 
@@ -45,11 +45,11 @@ Edit `background/proxy-config.js`:
 
 ```javascript
 export const PROXY_CONFIG = {
-  host: "your-proxy-server.com",
+  host: "your-vps-server.com",
   port: 8080,
   scheme: "http",
   authAPI: {
-    baseURL: "http://your-auth-server.com:8081"
+    baseURL: "http://your-vps-server.com:8081"
   }
 };
 ```

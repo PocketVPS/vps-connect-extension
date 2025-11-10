@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Proxy Pet extension will be documented in this file.
+All notable changes to Pocket VPS extension will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -10,8 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release
 - JWT authentication support
-- One-click proxy toggle
-- Two proxy modes: "All sites" and "Selected sites only"
+- One-click vps toggle
 - URL whitelist management with wildcard support
 - Visual status badge (ON/OFF)
 - Secure credential storage

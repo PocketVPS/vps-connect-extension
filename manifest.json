@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Proxy Pet",
+  "name": "VPS Connect",
   "version": "1.0.0",
-  "description": "Простое управление прокси-сервером - включение/выключение одним кликом",
+  "description": "Быстрое подключение к вашему VPS серверу в один клик",
   
   "permissions": [
     "proxy",
@@ -21,7 +21,7 @@
   },
   
   "action": {
-    "default_title": "Proxy Pet",
+    "default_title": "VPS Connect - Подключение к серверу",
     "default_popup": "popup/popup.html"
   },
   

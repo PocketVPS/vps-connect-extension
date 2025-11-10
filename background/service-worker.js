@@ -3,7 +3,7 @@ import { proxyManager } from './proxy-manager.js';
 import { PROXY_CONFIG } from './proxy-config.js';
 import { getJWTToken, isAuthenticated } from './auth-api.js';
 
-console.log('[Service Worker] Proxy Pet запущен');
+console.log('[Service Worker] VPS Connect запущен');
 
 let jwtTokenCache = null;
 
@@ -21,14 +21,14 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 
 chrome.webRequest.onAuthRequired.addListener(
   function(details) {
-    console.log('[Service Worker] 🔐 Запрос авторизации прокси (407)');
+    console.log('[Service Worker] 🔐 Запрос авторизации сервера (407)');
     console.log('[Service Worker] URL:', details.url);
     console.log('[Service Worker] isProxy:', details.isProxy);
     console.log('[Service Worker] Realm:', details.realm);
     console.log('[Service Worker] Scheme:', details.scheme);
     
     if (!details.isProxy) {
-      console.log('[Service Worker] Не прокси-запрос, пропускаем');
+      console.log('[Service Worker] Не запрос к серверу, пропускаем');
       return {};
     }
     

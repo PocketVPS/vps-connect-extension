@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proxy Pet</title>
+    <title>VPS Connect</title>
     <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -17,7 +17,7 @@
                     <text x="64" y="84" font-family="Arial, sans-serif" font-size="70" text-anchor="middle" fill="white" font-weight="bold">P</text>
                 </svg>
             </div>
-            <h1>Proxy Pet</h1>
+            <h1>VPS Connect</h1>
         </div>
 
         <!-- Not Authenticated View -->
@@ -64,6 +64,28 @@
                     <div class="error-message" id="register-error"></div>
                 </form>
             </div>
+
+            <!-- Email Verification Form -->
+            <div id="verify-form" class="tab-content">
+                <div class="verify-info">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#4285F4" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    <h3>Проверьте вашу почту</h3>
+                    <p>Мы отправили 4-значный код на <strong id="verify-email-display"></strong></p>
+                </div>
+                <form id="verifyForm">
+                    <div class="form-group">
+                        <label for="verify-code">Код подтверждения</label>
+                        <input type="text" id="verify-code" name="code" placeholder="1234" required maxlength="4" pattern="[0-9]{4}" inputmode="numeric">
+                        <small>Введите 4-значный код из письма</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Подтвердить</button>
+                    <button type="button" id="back-to-register" class="btn btn-secondary">Назад</button>
+                    <div class="error-message" id="verify-error"></div>
+                </form>
+            </div>
         </div>
 
         <!-- Authenticated View -->
@@ -85,10 +107,10 @@
                 </div>
             </div>
 
-            <!-- Proxy Control -->
+            <!-- Server Connection Control -->
             <div class="proxy-control">
                 <div class="control-header">
-                    <h2>Управление прокси</h2>
+                    <h2>Подключение к серверу</h2>
                     <div class="proxy-status" id="proxy-status">
                         <span class="status-indicator off"></span>
                         <span>Выключен</span>
@@ -100,7 +122,7 @@
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M8 12h8"/>
                     </svg>
-                    <span>Включить прокси</span>
+                    <span>Подключиться</span>
                 </button>
 
                 <div class="proxy-info" id="proxy-info">
@@ -110,10 +132,10 @@
                     </div>
                 </div>
                 
-                <!-- Proxy Mode Selection -->
+                <!-- Connection Mode Selection -->
                 <div class="proxy-mode">
                     <div class="mode-header">
-                        <span class="label">Режим проксирования:</span>
+                        <span class="label">Режим подключения:</span>
                     </div>
                     <div class="mode-selector">
                         <label class="radio-label">
@@ -122,7 +144,7 @@
                         </label>
                         <label class="radio-label">
                             <input type="radio" name="proxy-mode" value="whitelist" id="mode-whitelist">
-                            <span>Только выбранные</span>
+                            <span>Выбранные сайты</span>
                         </label>
                     </div>
                 </div>

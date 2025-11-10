@@ -541,3 +541,43 @@ body {
 .url-list::-webkit-scrollbar-thumb:hover {
     background: #a1a1a1;
 }
+
+/* Email Verification Form */
+.verify-info {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.verify-info svg {
+    margin: 0 auto 16px;
+    display: block;
+}
+
+.verify-info h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.verify-info p {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+}
+
+.verify-info strong {
+    color: #4285F4;
+    font-weight: 600;
+}
+
+#verify-code {
+    text-align: center;
+    font-size: 24px;
+    letter-spacing: 8px;
+    font-weight: 600;
+}
+
+#verifyForm .btn {
+    margin-bottom: 8px;
+}

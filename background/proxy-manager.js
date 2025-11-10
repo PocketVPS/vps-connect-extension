@@ -27,7 +27,7 @@ class ProxyManager {
       
       const REQUIRE_AUTH = true;
       if (REQUIRE_AUTH && !result.jwtToken) {
-        console.log('[ProxyManager] Нет токена авторизации - прокси отключен');
+        console.log('[ProxyManager] Нет токена авторизации - подключение отключено');
         this.isEnabled = false;
         await chrome.storage.local.set({ proxyEnabled: false });
         await this.disableProxy();
@@ -49,7 +49,7 @@ class ProxyManager {
               if (REQUIRE_AUTH) {
                 const result = await chrome.storage.local.get('jwtToken');
                 if (!result.jwtToken) {
-                  console.log('[ProxyManager] Попытка включить прокси без авторизации - отклонено');
+                  console.log('[ProxyManager] Попытка подключиться без авторизации - отклонено');
                   this.isEnabled = false;
                   await chrome.storage.local.set({ proxyEnabled: false });
                   await this.disableProxy();
@@ -80,7 +80,7 @@ class ProxyManager {
           }
           
           if (changes.jwtToken && !changes.jwtToken.newValue) {
-            console.log('[ProxyManager] Токен удален (logout) - отключаю прокси');
+            console.log('[ProxyManager] Токен удален (logout) - отключаю подключение');
             this.isEnabled = false;
             await chrome.storage.local.set({ proxyEnabled: false });
             await this.disableProxy();
@@ -168,22 +168,22 @@ class ProxyManager {
       this.isEnabled = true;
       await chrome.storage.local.set({ proxyEnabled: true });
       
-      console.log(`[ProxyManager] Прокси включён: ${PROXY_CONFIG.host}:${PROXY_CONFIG.port}`);
+      console.log(`[ProxyManager] Подключение установлено: ${PROXY_CONFIG.host}:${PROXY_CONFIG.port}`);
       
       chrome.proxy.settings.get({}, (config) => {
-        console.log('[ProxyManager] Текущие настройки прокси:', JSON.stringify(config.value, null, 2));
+        console.log('[ProxyManager] Текущие настройки подключения:', JSON.stringify(config.value, null, 2));
       });
       
       if (PROXY_CONFIG.showBadge) {
         this.updateBadge(true);
       }
       
-      const mode = this.proxyMode === 'whitelist' ? 'Только выбранные' : 'Все сайты';
-      this.showNotification('Прокси включён', `${PROXY_CONFIG.host}:${PROXY_CONFIG.port}\n${mode}`);
+      const mode = this.proxyMode === 'whitelist' ? 'Выбранные сайты' : 'Все сайты';
+      this.showNotification('Подключено к серверу', `${PROXY_CONFIG.host}:${PROXY_CONFIG.port}\n${mode}`);
       
     } catch (error) {
-      console.error('[ProxyManager] Ошибка включения прокси:', error);
-      this.showNotification('Ошибка', 'Не удалось включить прокси');
+      console.error('[ProxyManager] Ошибка подключения:', error);
+      this.showNotification('Ошибка', 'Не удалось подключиться к серверу');
       throw error;
     }
   }
@@ -329,23 +329,23 @@ function FindProxyForURL(url, host) {
       this.isEnabled = false;
       await chrome.storage.local.set({ proxyEnabled: false });
       
-      console.log('[ProxyManager] Прокси отключён');
+      console.log('[ProxyManager] Подключение отключено');
       
       if (PROXY_CONFIG.showBadge) {
         this.updateBadge(false);
       }
       
-      this.showNotification('Прокси отключён', 'Прямое подключение');
+      this.showNotification('Отключено от сервера', 'Прямое подключение');
       
     } catch (error) {
-      console.error('[ProxyManager] Ошибка отключения прокси:', error);
-      this.showNotification('Ошибка', 'Не удалось отключить прокси');
+      console.error('[ProxyManager] Ошибка отключения:', error);
+      this.showNotification('Ошибка', 'Не удалось отключиться от сервера');
       throw error;
     }
   }
 
   async toggleProxy() {
-    console.log('[ProxyManager] Toggle прокси, текущее состояние:', this.isEnabled);
+    console.log('[ProxyManager] Переключение подключения, текущее состояние:', this.isEnabled);
     
     if (this.isEnabled) {
       await this.disableProxy();
@@ -372,13 +372,13 @@ function FindProxyForURL(url, host) {
       chrome.action.setBadgeText({ text: 'ON' });
       chrome.action.setBadgeBackgroundColor({ color: '#4CAF50' });
       chrome.action.setTitle({ 
-        title: `Proxy Pet: ВКЛЮЧЁН\n${PROXY_CONFIG.host}:${PROXY_CONFIG.port}\n(кликните для отключения)` 
+        title: `VPS Connect: ПОДКЛЮЧЕНО\n${PROXY_CONFIG.host}:${PROXY_CONFIG.port}\n(кликните для отключения)` 
       });
     } else {
       chrome.action.setBadgeText({ text: 'OFF' });
       chrome.action.setBadgeBackgroundColor({ color: '#F44336' });
       chrome.action.setTitle({ 
-        title: 'Proxy Pet: ОТКЛЮЧЁН\n(кликните для включения)' 
+        title: 'VPS Connect: ОТКЛЮЧЕНО\n(кликните для подключения)' 
       });
     }
   }

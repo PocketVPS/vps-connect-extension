@@ -1,6 +1,6 @@
 # 🚀 How to Publish to GitHub
 
-This guide will help you publish the Proxy Pet extension to GitHub.
+This guide will help you publish the Pocket VPS extension to GitHub.
 
 ## Prerequisites
 
@@ -12,8 +12,8 @@ This guide will help you publish the Proxy Pet extension to GitHub.
 
 1. Go to https://github.com/new
 2. Fill in the repository details:
-   - **Repository name**: `proxy-pet-extension`
-   - **Description**: `🐾 Secure Chrome extension for managing proxy connections with JWT authentication`
+   - **Repository name**: `Pocket VPS`
+   - **Description**: `🐾 Secure Chrome extension for managing vps connections with JWT authentication`
    - **Visibility**: ✅ **Public** (so users can download)
    - **DO NOT** initialize with README (we already have one)
 3. Click **Create repository**

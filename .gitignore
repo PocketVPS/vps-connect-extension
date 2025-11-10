@@ -1,18 +1,6 @@
-# Credentials (DO NOT COMMIT!)
-*credentials*.js
-*credentials*.json
-*secret*.js
-*.pem
-*.crx
-
-# Build artifacts
-dist/
-build/
-node_modules/
-
 # IDE
-.vscode/
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
@@ -21,17 +9,21 @@ node_modules/
 .DS_Store
 Thumbs.db
 
+# Node modules (if using build tools)
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Extension packages
+*.crx
+*.pem
+*.zip
+
 # Logs
 *.log
-npm-debug.log*
 
 # Temporary files
-*.tmp
-.cache/
-
-# Package files (if using npm)
-package-lock.json
-yarn.lock
-
-# Screenshots (add your own)
-screenshots/.gitkeep
+tmp/
+temp/
