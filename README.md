@@ -40,6 +40,9 @@ Chrome extension for easy one-click connection to your VPS server with JWT authe
    - **Выбранные сайты** (Selected Sites) - route only selected URLs
 5. Add URLs to your list as needed (e.g., `youtube.com`, `*.google.com`)
 
+## 💵 Price
+The price for 1 month is about $1 - $2
+
 ## 📝 License
 
 MIT License - see [LICENSE](LICENSE) file for details.
