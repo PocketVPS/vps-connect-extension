@@ -45,8 +45,19 @@ const loginError = document.getElementById('login-error');
 const registerError = document.getElementById('register-error');
 const verifyError = document.getElementById('verify-error');
 
+// Subscription elements
+const subscriptionSection = document.getElementById('subscription-section');
+const subscriptionActive = document.getElementById('subscription-active');
+const subscriptionInactive = document.getElementById('subscription-inactive');
+const subscriptionEndDate = document.getElementById('subscription-end-date');
+const subscriptionDaysLeft = document.getElementById('subscription-days-left');
+const buySubscriptionBtn = document.getElementById('buy-subscription-btn');
+const extendSubscriptionBtn = document.getElementById('extend-subscription-btn');
+const planOptions = document.querySelectorAll('.plan-option');
+
 // Store email for verification
 let pendingVerificationEmail = null;
+let selectedPeriod = 3; // Default: 3 months
 
 /**
  * Initialize popup
@@ -111,6 +122,19 @@ function setupEventListeners() {
     addUrlBtn.addEventListener('click', showAddUrlForm);
     saveUrlBtn.addEventListener('click', handleAddUrl);
     cancelUrlBtn.addEventListener('click', hideAddUrlForm);
+    
+    // Subscription management
+    buySubscriptionBtn.addEventListener('click', handleBuySubscription);
+    extendSubscriptionBtn.addEventListener('click', handleBuySubscription);
+    
+    // Plan selection
+    planOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            planOptions.forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            selectedPeriod = parseInt(option.dataset.period);
+        });
+    });
 }
 
 /**
@@ -404,6 +428,9 @@ async function showDashboard() {
         console.warn('[Popup] Failed to sync whitelist from server, using local cache', e);
         await loadUrlWhitelist();
     }
+    
+    // Load subscription info
+    await loadSubscription();
 }
 
 /**
@@ -835,6 +862,150 @@ async function handleRemoveUrl(url) {
         await chrome.runtime.sendMessage({ action: 'updateWhitelist', urls: filtered });
     } catch (error) {
         console.error('[Popup] Error sending updateWhitelist message:', error);
+    }
+}
+
+/**
+ * Load subscription information
+ */
+async function loadSubscription() {
+    try {
+        const token = await getToken();
+        if (!token) return;
+        
+        const response = await fetch(`${API_BASE_URL}/billing/subscription`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            console.error('[Popup] Failed to load subscription:', response.status);
+            showNoSubscription();
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.has_active && data.subscription) {
+            showActiveSubscription(data.subscription, data.days_remaining);
+        } else {
+            showNoSubscription();
+        }
+        
+        // Load pricing
+        await loadPricing();
+    } catch (error) {
+        console.error('[Popup] Error loading subscription:', error);
+        showNoSubscription();
+    }
+}
+
+/**
+ * Load pricing information
+ */
+async function loadPricing() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/billing/pricing`);
+        
+        if (!response.ok) {
+            console.error('[Popup] Failed to load pricing:', response.status);
+            return;
+        }
+        
+        const data = await response.json();
+        
+        // Update prices in UI
+        if (data.plans) {
+            data.plans.forEach(plan => {
+                const priceEl = document.getElementById(`price-${plan.period}`);
+                if (priceEl) {
+                    priceEl.textContent = `${plan.price.toFixed(2)} ₽`;
+                }
+            });
+        }
+    } catch (error) {
+        console.error('[Popup] Error loading pricing:', error);
+    }
+}
+
+/**
+ * Show active subscription
+ */
+function showActiveSubscription(subscription, daysRemaining) {
+    subscriptionActive.classList.remove('hidden');
+    subscriptionInactive.classList.add('hidden');
+    
+    // Format end date
+    const endDate = new Date(subscription.end_date);
+    const formattedDate = endDate.toLocaleDateString('ru-RU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    
+    subscriptionEndDate.textContent = formattedDate;
+    subscriptionDaysLeft.textContent = daysRemaining;
+}
+
+/**
+ * Show no subscription state
+ */
+function showNoSubscription() {
+    subscriptionActive.classList.add('hidden');
+    subscriptionInactive.classList.remove('hidden');
+}
+
+/**
+ * Handle buy/extend subscription
+ */
+async function handleBuySubscription() {
+    try {
+        const token = await getToken();
+        if (!token) {
+            alert('Необходима авторизация');
+            return;
+        }
+        
+        showLoading();
+        
+        // Create payment
+        const response = await fetch(`${API_BASE_URL}/billing/payment`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                period: selectedPeriod
+            })
+        });
+        
+        hideLoading();
+        
+        if (!response.ok) {
+            const error = await response.json();
+            alert('Ошибка создания платежа: ' + (error.error || 'Unknown error'));
+            return;
+        }
+        
+        const payment = await response.json();
+        
+        console.log('[Popup] Payment created:', payment);
+        
+        // Open payment URL in new tab
+        if (payment.confirmation_url) {
+            chrome.tabs.create({ url: payment.confirmation_url });
+            
+            // Show success message
+            alert(`Платеж создан!\nСумма: ${payment.amount} ₽\nПериод: ${payment.period} мес.\n\nСтраница оплаты откроется в новой вкладке.`);
+        } else {
+            alert('Ошибка: не получена ссылка на оплату');
+        }
+    } catch (error) {
+        hideLoading();
+        console.error('[Popup] Error creating payment:', error);
+        alert('Ошибка при создании платежа: ' + error.message);
     }
 }
 

@@ -107,6 +107,73 @@
                 </div>
             </div>
 
+            <!-- Subscription Info -->
+            <div class="subscription-section" id="subscription-section">
+                <div class="subscription-header">
+                    <h3>Подписка</h3>
+                </div>
+                
+                <!-- Active Subscription -->
+                <div class="subscription-active hidden" id="subscription-active">
+                    <div class="subscription-status">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        <span class="status-text">Активна</span>
+                    </div>
+                    <div class="subscription-details">
+                        <div class="detail-item">
+                            <span class="label">Действует до:</span>
+                            <span class="value" id="subscription-end-date">—</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Осталось дней:</span>
+                            <span class="value" id="subscription-days-left">—</span>
+                        </div>
+                    </div>
+                    <button id="extend-subscription-btn" class="btn btn-secondary btn-small">Продлить подписку</button>
+                </div>
+                
+                <!-- No Subscription -->
+                <div class="subscription-inactive" id="subscription-inactive">
+                    <div class="subscription-message">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF9800" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <p>У вас нет активной подписки</p>
+                        <small>Оформите подписку для доступа к VPS серверу</small>
+                    </div>
+                    <div class="pricing-plans">
+                        <div class="plan-option" data-period="1">
+                            <div class="plan-header">
+                                <span class="plan-duration">1 месяц</span>
+                                <span class="plan-price" id="price-1">150 ₽</span>
+                            </div>
+                        </div>
+                        <div class="plan-option recommended" data-period="3">
+                            <div class="plan-badge">Выгодно</div>
+                            <div class="plan-header">
+                                <span class="plan-duration">3 месяца</span>
+                                <span class="plan-price" id="price-3">427.50 ₽</span>
+                            </div>
+                            <div class="plan-discount">Скидка 5%</div>
+                        </div>
+                        <div class="plan-option" data-period="6">
+                            <div class="plan-badge">Максимум</div>
+                            <div class="plan-header">
+                                <span class="plan-duration">6 месяцев</span>
+                                <span class="plan-price" id="price-6">810 ₽</span>
+                            </div>
+                            <div class="plan-discount">Скидка 10%</div>
+                        </div>
+                    </div>
+                    <button id="buy-subscription-btn" class="btn btn-primary btn-large">Оформить подписку</button>
+                </div>
+            </div>
+
             <!-- Server Connection Control -->
             <div class="proxy-control">
                 <div class="control-header">

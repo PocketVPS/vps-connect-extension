@@ -47,6 +47,171 @@ body {
     display: none;
 }
 
+/* Subscription Section */
+.subscription-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.subscription-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+/* Active Subscription */
+.subscription-active {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.subscription-active.hidden {
+    display: none;
+}
+
+.subscription-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #e8f5e9;
+    border-radius: 6px;
+}
+
+.subscription-status .status-text {
+    color: #4CAF50;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.subscription-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.subscription-details .detail-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+}
+
+.subscription-details .label {
+    color: #666;
+}
+
+.subscription-details .value {
+    font-weight: 600;
+    color: #333;
+}
+
+/* Inactive Subscription */
+.subscription-inactive {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.subscription-inactive.hidden {
+    display: none;
+}
+
+.subscription-message {
+    text-align: center;
+    padding: 12px;
+}
+
+.subscription-message svg {
+    margin: 0 auto 12px;
+    display: block;
+}
+
+.subscription-message p {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.subscription-message small {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Pricing Plans */
+.pricing-plans {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.plan-option {
+    position: relative;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+}
+
+.plan-option:hover {
+    border-color: #4285F4;
+    box-shadow: 0 2px 8px rgba(66, 133, 244, 0.1);
+}
+
+.plan-option.recommended {
+    border-color: #4285F4;
+    background: linear-gradient(135deg, #f0f7ff 0%, #e3f2fd 100%);
+}
+
+.plan-option.selected {
+    border-color: #4285F4;
+    background: #e3f2fd;
+}
+
+.plan-badge {
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    background: #4285F4;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+}
+
+.plan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.plan-duration {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.plan-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: #4285F4;
+}
+
+.plan-discount {
+    font-size: 11px;
+    color: #4CAF50;
+    margin-top: 4px;
+    font-weight: 600;
+}
+
 /* Tabs */
 .tabs {
     display: flex;
