@@ -20,8 +20,8 @@ Chrome extension for easy one-click connection to your VPS server with JWT authe
    OR
    Download the latest release from [Releases](https://github.com/PocketVPS/vps-connect-extension/releases)
 
-2. **Install in browser**
-   - Open your browser and go to `browser://extensions`
+2. 🤌🤌🤌 **Install in browser**
+   - ⚠️ Open your browser and go to `browser://extensions`
    - Enable **Developer mode** (toggle in top right corner)
    - Click **Load unpacked**
    - Select the `vps-connect-extension` folder
@@ -39,6 +39,9 @@ Chrome extension for easy one-click connection to your VPS server with JWT authe
    - **Все сайты** (All Sites) - route all traffic through your server
    - **Выбранные сайты** (Selected Sites) - route only selected URLs
 5. Add URLs to your list as needed (e.g., `youtube.com`, `*.google.com`)
+
+## 💵 Price
+The price for 1 month is about $1 - $2
 
 ## 📝 License
 
