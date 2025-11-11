@@ -20,8 +20,8 @@ Chrome extension for easy one-click connection to your VPS server with JWT authe
    OR
    Download the latest release from [Releases](https://github.com/PocketVPS/vps-connect-extension/releases)
 
-2. **Install in browser**
-   - Open your browser and go to `browser://extensions`
+2. 🤌🤌🤌 **Install in browser**
+   - ⚠️ Open your browser and go to `browser://extensions`
    - Enable **Developer mode** (toggle in top right corner)
    - Click **Load unpacked**
    - Select the `vps-connect-extension` folder
