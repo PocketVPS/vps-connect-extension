@@ -284,6 +284,11 @@ function FindProxyForURL(url, host) {
       if (pattern.includes('/')) {
         // IP with subnet
         return `isInNet(host, "${pattern.split('/')[0]}", "${pattern.split('/')[1] || '255.255.255.255'}")`;
+      } else if (pattern.includes(':')) {
+        // Host with port - extract just the host part for PAC script
+        // PAC script's 'host' variable doesn't include port
+        const hostOnly = pattern.split(':')[0];
+        return `host == "${hostOnly}"`;
       } else {
         return `dnsDomainIs(host, "${cleanPattern}") || host == "${cleanPattern}"`;
       }

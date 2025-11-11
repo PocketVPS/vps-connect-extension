@@ -22,10 +22,10 @@ body {
 .header {
     background: linear-gradient(135deg, #1a237e 0%, #4285F4 100%);
     color: white;
-    padding: 20px;
+    padding: 12px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .logo svg {
@@ -33,8 +33,79 @@ body {
 }
 
 .header h1 {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 600;
+}
+
+.header .info {
+    margin-left: auto;
+    position: relative;
+}
+
+.info-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: default;
+    user-select: none;
+}
+
+.info-trigger:hover {
+    background: rgba(255,255,255,0.12);
+}
+
+.info-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 8px;
+    background: #fff8e1;
+    color: #8d6e63;
+    border: 1px solid #ffe0b2;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    width: 260px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    display: none;
+    z-index: 100;
+}
+
+.info:hover .info-dropdown,
+.info:focus-within .info-dropdown {
+    display: block;
+}
+
+.info-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #fff8e1;
+    color: #8d6e63;
+    border: 1px solid #ffe0b2;
+    border-radius: 6px;
+    margin: 10px 20px 0 20px;
+}
+
+.info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffb300;
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
 }
 
 /* Views */
@@ -165,13 +236,14 @@ body {
 }
 
 .plan-option.recommended {
-    border-color: #4285F4;
-    background: linear-gradient(135deg, #f0f7ff 0%, #e3f2fd 100%);
+    border-color: #e0e0e0;
+    background: #ffffff;
 }
 
 .plan-option.selected {
-    border-color: #4285F4;
+    border-color: #1a73e8;
     background: #e3f2fd;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
 }
 
 .plan-badge {

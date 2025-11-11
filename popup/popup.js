@@ -23,7 +23,6 @@ const verifyForm = document.getElementById('verifyForm');
 const backToRegisterBtn = document.getElementById('back-to-register');
 
 // Dashboard elements
-const userEmailEl = document.getElementById('user-email');
 const toggleProxyBtn = document.getElementById('toggle-proxy');
 const proxyStatusEl = document.getElementById('proxy-status');
 const proxyServerEl = document.getElementById('proxy-server');
@@ -59,6 +58,44 @@ const planOptions = document.querySelectorAll('.plan-option');
 let pendingVerificationEmail = null;
 let selectedPeriod = 3; // Default: 3 months
 
+const AUTH_STATE_KEY = 'auth_flow_state';
+const TTL_MS = 5 * 60 * 1000;
+
+async function loadAuthState() {
+    const res = await chrome.storage.session.get(AUTH_STATE_KEY);
+    const state = res[AUTH_STATE_KEY];
+    if (!state) return null;
+    if (state.expiresAt && Date.now() > state.expiresAt) {
+        await chrome.storage.session.remove(AUTH_STATE_KEY);
+        return null;
+    }
+    return state;
+}
+
+async function saveAuthState(partial) {
+    const res = await chrome.storage.session.get(AUTH_STATE_KEY);
+    const prev = res[AUTH_STATE_KEY] || {};
+    const state = { ...prev, ...partial, expiresAt: Date.now() + TTL_MS };
+    await chrome.storage.session.set({ [AUTH_STATE_KEY]: state });
+    try { await chrome.runtime.sendMessage({ action: 'authState:scheduleExpire', when: state.expiresAt }); } catch (e) {}
+}
+
+async function clearAuthState() {
+    await chrome.storage.session.remove(AUTH_STATE_KEY);
+    try { await chrome.runtime.sendMessage({ action: 'authState:clear' }); } catch (e) {}
+}
+
+async function tryRestoreAuthState() {
+    const token = await getToken();
+    if (token) return;
+    const state = await loadAuthState();
+    if (state && state.step === 'verify' && state.email) {
+        pendingVerificationEmail = state.email;
+        document.getElementById('verify-email-display').textContent = state.email;
+        switchTab('verify');
+    }
+}
+
 /**
  * Initialize popup
  */
@@ -81,6 +118,8 @@ async function init() {
     } else {
         showAuth();
     }
+    
+    await tryRestoreAuthState();
     
     // Setup event listeners
     setupEventListeners();
@@ -106,7 +145,7 @@ function setupEventListeners() {
     
     // Verify form
     verifyForm.addEventListener('submit', handleVerifyEmail);
-    backToRegisterBtn.addEventListener('click', () => switchTab('register'));
+    backToRegisterBtn.addEventListener('click', async () => { await clearAuthState(); switchTab('register'); });
     
     // Toggle proxy
     toggleProxyBtn.addEventListener('click', handleToggleProxy);
@@ -130,10 +169,17 @@ function setupEventListeners() {
     // Plan selection
     planOptions.forEach(option => {
         option.addEventListener('click', () => {
-            planOptions.forEach(opt => opt.classList.remove('selected'));
-            option.classList.add('selected');
             selectedPeriod = parseInt(option.dataset.period);
+            applySelectedPeriodVisual();
         });
+    });
+    applySelectedPeriodVisual();
+}
+
+function applySelectedPeriodVisual() {
+    planOptions.forEach(opt => {
+        const period = parseInt(opt.dataset.period);
+        opt.classList.toggle('selected', period === selectedPeriod);
     });
 }
 
@@ -263,9 +309,9 @@ async function handleRegister(e) {
         console.log('[Popup] Response data:', data);
         
         if (response.ok) {
-            // Registration successful, show verification form
             pendingVerificationEmail = email;
             document.getElementById('verify-email-display').textContent = email;
+            await saveAuthState({ step: 'verify', email });
             registerForm.reset();
             switchTab('verify');
         } else {
@@ -311,17 +357,14 @@ async function handleVerifyEmail(e) {
         console.log('[Popup] Verification response:', data);
         
         if (response.ok) {
-            // Save token and user
             await saveToken(data.token);
             await saveUser(data.user);
             
-            // Clear pending email
             pendingVerificationEmail = null;
+            await clearAuthState();
             
-            // Show dashboard
             await showDashboard();
             
-            // Reset form
             verifyForm.reset();
         } else {
             showError(verifyError, data.error || 'Неверный код. Проверьте код из письма.');
@@ -393,12 +436,6 @@ function showAuth() {
 async function showDashboard() {
     authView.classList.add('hidden');
     dashboardView.classList.remove('hidden');
-    
-    // Load user data
-    const user = await getUser();
-    if (user) {
-        userEmailEl.textContent = user.email;
-    }
     
     // Load proxy status
     const proxyEnabled = await getProxyStatus();
@@ -954,6 +991,7 @@ function showActiveSubscription(subscription, daysRemaining) {
 function showNoSubscription() {
     subscriptionActive.classList.add('hidden');
     subscriptionInactive.classList.remove('hidden');
+    applySelectedPeriodVisual();
 }
 
 /**
@@ -969,6 +1007,11 @@ async function handleBuySubscription() {
         
         showLoading();
         
+        console.log('[Popup] Создание платежа...');
+        console.log('[Popup] URL:', `${API_BASE_URL}/billing/payment`);
+        console.log('[Popup] Token (first 20 chars):', token.substring(0, 20) + '...');
+        console.log('[Popup] Period:', selectedPeriod);
+        
         // Create payment
         const response = await fetch(`${API_BASE_URL}/billing/payment`, {
             method: 'POST',
@@ -979,13 +1022,41 @@ async function handleBuySubscription() {
             body: JSON.stringify({
                 period: selectedPeriod
             })
+        }).catch(err => {
+            console.error('[Popup] Fetch error (network):', err);
+            console.error('[Popup] Error name:', err.name);
+            console.error('[Popup] Error message:', err.message);
+            throw err;
         });
         
         hideLoading();
         
+        console.log('[Popup] Response status:', response.status);
+        console.log('[Popup] Response headers:', [...response.headers.entries()]);
+        console.log('[Popup] Response type:', response.type);
+        
         if (!response.ok) {
-            const error = await response.json();
-            alert('Ошибка создания платежа: ' + (error.error || 'Unknown error'));
+            const contentType = response.headers.get('content-type');
+            console.log('[Popup] Error response content-type:', contentType);
+            
+            let errorMessage = 'Unknown error';
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    const error = await response.json();
+                    errorMessage = error.error || 'Unknown error';
+                } catch (e) {
+                    console.error('[Popup] Failed to parse error JSON:', e);
+                    const text = await response.text();
+                    console.error('[Popup] Error response text:', text);
+                    errorMessage = text.substring(0, 200);
+                }
+            } else {
+                const text = await response.text();
+                console.error('[Popup] Error response text:', text);
+                errorMessage = text.substring(0, 200);
+            }
+            
+            alert('Ошибка создания платежа: ' + errorMessage);
             return;
         }
         

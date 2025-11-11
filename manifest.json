@@ -8,7 +8,8 @@
     "proxy",
     "storage",
     "webRequest",
-    "webRequestAuthProvider"
+    "webRequestAuthProvider",
+    "alarms"
   ],
   
   "host_permissions": [

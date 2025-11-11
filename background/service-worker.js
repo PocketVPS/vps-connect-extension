@@ -12,6 +12,9 @@ let jwtTokenCache = null;
   console.log('[Service Worker] JWT токен загружен в кеш:', jwtTokenCache ? 'Да' : 'Нет');
 })();
 
+const AUTH_STATE_KEY = 'auth_flow_state';
+const AUTH_ALARM = 'auth_flow_state_expire';
+
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'local' && changes.jwtToken) {
     jwtTokenCache = changes.jwtToken.newValue;
@@ -57,7 +60,23 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
       const isAuthAPI = url.hostname === '140.235.130.166' && url.port === '8081';
       
       if (isAuthAPI) {
-        console.log('[Service Worker] Пропускаю Auth API запрос:', details.url);
+        // Auth API запросы (включая billing) уже имеют Authorization заголовок из popup.js
+        console.log('[Service Worker] Auth API запрос:', details.url);
+        console.log('[Service Worker] Метод:', details.method);
+        console.log('[Service Worker] Заголовки запроса:', details.requestHeaders.map(h => `${h.name}: ${h.value.substring(0, 50)}...`));
+        
+        // Проверяем наличие Authorization заголовка
+        const hasAuth = details.requestHeaders.some(h => h.name.toLowerCase() === 'authorization');
+        console.log('[Service Worker] Authorization заголовок присутствует:', hasAuth);
+        
+        // ВАЖНО: Для Auth API не нужен Proxy-Authorization, только Authorization
+        // Убедимся что Proxy-Authorization НЕ добавлен
+        const hasProxyAuth = details.requestHeaders.some(h => h.name.toLowerCase() === 'proxy-authorization');
+        if (hasProxyAuth) {
+          console.warn('[Service Worker] ⚠️ ВНИМАНИЕ: Proxy-Authorization найден в Auth API запросе! Удаляю...');
+          details.requestHeaders = details.requestHeaders.filter(h => h.name.toLowerCase() !== 'proxy-authorization');
+        }
+        
         return { requestHeaders: details.requestHeaders };
       }
     } catch (e) {
@@ -119,7 +138,6 @@ chrome.action.onClicked.addListener(async () => {
   }
 });
 
-
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log('[Service Worker] Получено сообщение:', request);
   
@@ -175,6 +193,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           sendResponse({ success: true });
           break;
           
+        case 'authState:scheduleExpire':
+          if (request.when && typeof request.when === 'number') {
+            await chrome.alarms.clear(AUTH_ALARM);
+            chrome.alarms.create(AUTH_ALARM, { when: request.when });
+          }
+          sendResponse({ success: true });
+          break;
+          
+        case 'authState:clear':
+          await chrome.storage.session.remove(AUTH_STATE_KEY);
+          await chrome.alarms.clear(AUTH_ALARM);
+          sendResponse({ success: true });
+          break;
+          
         default:
           sendResponse({ success: false, error: 'Unknown action' });
       }
@@ -185,6 +217,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   })();
   
   return true;
+});
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === AUTH_ALARM) {
+    try {
+      await chrome.storage.session.remove(AUTH_STATE_KEY);
+      console.log('[Service Worker] Auth state expired and cleared');
+    } catch (e) {
+      console.error('[Service Worker] Failed to clear auth state on alarm:', e);
+    }
+  }
 });
 
 chrome.proxy.onProxyError.addListener((details) => {

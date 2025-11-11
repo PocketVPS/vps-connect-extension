@@ -39,7 +39,7 @@ export const PROXY_CONFIG = {
     "10.*",
     "172.16.*",
     "<local>",  // Chrome special notation for local addresses
-    "140.235.130.166:8081"  // Auth API - do not proxy!
+    "140.235.130.166"  // Auth API - do not proxy! (bypass entire host, not just port)
   ],
   
   // Auto-enable proxy on browser startup
