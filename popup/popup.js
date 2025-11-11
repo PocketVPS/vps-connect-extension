@@ -2,8 +2,8 @@
 import { PROXY_CONFIG } from '../background/proxy-config.js';
 
 // API Configuration
-//const API_BASE_URL = `http://localhost:8081/api`;
-const API_BASE_URL = `http://140.235.130.166:8081/api`;
+//const API_BASE_URL = `http://localhost:18184/api`;
+const API_BASE_URL = `http://140.235.130.166:18184/api`;
 
 console.log('[Popup] API URL:', API_BASE_URL);
 

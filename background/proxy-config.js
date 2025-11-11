@@ -11,7 +11,7 @@ export const PROXY_CONFIG = {
   host: "140.235.130.166",
   
   // Proxy server port
-  port: 8080,
+  port: 18183,
   
   // Proxy scheme: "http", "https", "socks4", "socks5"
   scheme: "http",
@@ -25,8 +25,8 @@ export const PROXY_CONFIG = {
   // Auth API server configuration
   authAPI: {
     host: "140.235.130.166",
-    port: 8081,
-    baseURL: "http://140.235.130.166:8081"
+    port: 18184,
+    baseURL: "http://140.235.130.166:18184"
   },
   
   // Bypass list - addresses that will NOT be proxied

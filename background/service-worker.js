@@ -57,7 +57,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
   function(details) {
     try {
       const url = new URL(details.url);
-      const isAuthAPI = url.hostname === '140.235.130.166' && url.port === '8081';
+      const isAuthAPI = url.hostname === '140.235.130.166' && url.port === '18184';
       
       if (isAuthAPI) {
         // Auth API запросы (включая billing) уже имеют Authorization заголовок из popup.js
